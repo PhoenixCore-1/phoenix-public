@@ -1,0 +1,10 @@
+node_modules/
+dist/
+backups/
+*.bak
+*.log
+.env
+.env.*
+!.env.example
+inspect_*.ps1
+patch_*.ps1
