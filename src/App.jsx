@@ -834,9 +834,57 @@ function DemoRequestModal() {
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (loggingIn) {
+      return;
+    }
+
+    setLoginError("");
+    setLoggingIn(true);
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+          remember_me: rememberMe,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setLoginError(
+          data.error || "Unable to sign in. Please check your credentials."
+        );
+        return;
+      }
+
+      if (!data.ok) {
+        setLoginError("Unable to sign in. Please try again.");
+        return;
+      }
+
+      window.location.href = "https://app.corephoenix.co.za/";
+    } catch (error) {
+      setLoginError(
+        "Unable to connect to Phoenix Core. Please try again."
+      );
+    } finally {
+      setLoggingIn(false);
+    }
   };
 
   return (
@@ -884,6 +932,8 @@ function LoginPage() {
                 autoComplete="username"
                 required
                 placeholder="Enter your email or username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
               />
             </label>
 
@@ -897,6 +947,8 @@ function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                 />
 
                 <button
@@ -928,11 +980,18 @@ function LoginPage() {
               </a>
             </div>
 
+            {loginError && (
+              <div className="login-error" role="alert">
+                {loginError}
+              </div>
+            )}
+
             <button
               type="submit"
               className="button button-large button-solid login-submit"
+              disabled={loggingIn}
             >
-              LOGIN
+              {loggingIn ? "SIGNING IN..." : "LOGIN"}
             </button>
           </form>
 
